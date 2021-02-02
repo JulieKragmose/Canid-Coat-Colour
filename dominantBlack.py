@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys, os
 
-def dominantBlack(sample, ID, bamfile, outfile, translationDict):
+def dominantBlack_alleles(bam, outfile, translationDict):
 	outfile.write('###------------------Dominant Black (CBD103)--------------------###\n')
 	outfile.write('NB! CBD103 is on the reverse strand!\n')
 	
@@ -19,15 +19,15 @@ def dominantBlack(sample, ID, bamfile, outfile, translationDict):
 		#Make file with aligment at allele position
 		BPpos = int(BPpos) - 6
 		try:
-			tview = 'samtools tview -d T -p chr16:'+str(BPpos)+' -s STR /groups/hologenomics/shyam/data/forJulie/bams/'+sample+'.realigned.bam > CBD103.'+ID+'.pos'+AApos+'.txt'
+			tview = 'samtools tview -d T -p chr16:'+str(BPpos)+' '+bam+' > CBD103.pos'+AApos+'.tview.txt'
 			if os.system(tview) != 0:
 				raise Exception()
 		except:
 			sys.exit(1)
 		
 		
-		#Go through reads for AA 21-25
-		viewfile = open('CBD103.'+ID+'.pos'+AApos+'.txt', 'r')
+		#Go through reads for AA 21-25 and save codons
+		viewfile = open('CBD103.pos'+AApos+'.tview.txt', 'r')
 		indexDict = {'15':[], '12':[], '9':[], '6':[], '3':[],}
 		lineNo = 0
 		
@@ -42,10 +42,11 @@ def dominantBlack(sample, ID, bamfile, outfile, translationDict):
 					if reverseCodon != '':
 						indexDict[str(i)].append(reverseCodon)
 		viewfile.close()
-		os.system('rm CBD103.*') #Clean-up
+		os.system('rm CBD103.pos'+AApos+'.tview.txt') #Clean-up
 
 		outfile.write('\n')
 		
+		#Reverse complement the codons
 		position = 21
 		for reverseCodons in indexDict.values():
 			codonDict = dict()
@@ -99,4 +100,5 @@ def dominantBlack(sample, ID, bamfile, outfile, translationDict):
 			position += 1
 	
 	outfile.write('\n')
+	
 	print('> Dominant black done')

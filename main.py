@@ -1,30 +1,34 @@
 #!/usr/bin/env python3
-import sys, os, re
-from agouti import agouti_alleles, agouti_SINE
-from extension import extension
-from dilution import dilution
-from dominantBlack import dominantBlack
+import sys, os, re, argparse
+from agouti import agouti_alleles
+from SINE import agouti_SINE
+from extension import extension_alleles
+from dominantBlack import dominantBlack_alleles
+from dilute import dilute_alleles
 
 
 
-#Input sample name
-if len(sys.argv) == 1:		# no commandline arguments
-    sample = input("Please enter a filename: ")
-elif len(sys.argv) == 2:	   # something is there
-    sample = sys.argv[1]
-else:
-    sys.stderr.write("Usage: #filename.py <filename>\n")
-    sys.exit(1)
+###--------- USER INPUT ---------###
+#Initiate argument parser
+parser = argparse.ArgumentParser() 		
+
+#Add arguments
+parser.add_argument("--bam", "-i", help="Path to bamfile") 			
+parser.add_argument("--out", "-o", help="Name output file")		
+
+#Read arguments from command line
+args = parser.parse_args() 	
+bam = args.bam
+output = args.out
 
 
+###--------- INITIALIZE --------###
 
+#Remove previous outfile and open new outfile
+if os.path.exists(output+'.txt'):
+	os.remove(output+'.txt')
+outfile = open(output+'.txt', 'a')
 
-ID = sample.split('.')[0]
-
-bamfile = open('/groups/hologenomics/shyam/data/forJulie/bams/'+sample+'.realigned.bam','r')
-
-os.system('rm colourSummary.'+ID+'.txt') #Delete previous outfile	
-outfile = open('colourSummary.'+ID+'.txt', 'a')
 
 translationDict = {'TTT':'F','TTC':'F',
 					'TTA':'L','TTG':'L','CTT':'L','CTC':'L','CTA':'L','CTG':'L',
@@ -49,11 +53,11 @@ translationDict = {'TTT':'F','TTC':'F',
 					'TAA':'*','TAG':'*','TGA':'*'} #Stop codon
 
 
-#Call functions
-agouti_alleles(sample, ID, bamfile, outfile, translationDict)
-agouti_SINE(sample, ID, bamfile, outfile)
-extension(sample, ID, bamfile, outfile, translationDict)
-dominantBlack(sample, ID, bamfile, outfile, translationDict)
-dilution(sample, ID, bamfile, outfile, translationDict)
+###--------- CALL FUNCTIONS ---------###
+agouti_alleles(bam, outfile, translationDict)
+agouti_SINE(bam, outfile)
+extension_alleles(bam, outfile, translationDict)
+dominantBlack_alleles(bam, outfile, translationDict)
+dilute_alleles(bam, outfile, translationDict)
 
 outfile.close()
